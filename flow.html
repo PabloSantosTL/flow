@@ -1,0 +1,595 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#111111">
+<title>FLOW — Gerenciador de tarefas</title>
+<style>
+:root{color-scheme:dark;--bg:#111;--panel:#171717;--panel2:#1d1d1d;--text:#f1f1e9;--muted:#92928a;--line:#393933;--accent:#d5ff65;--danger:#ff7777;--good:#a7e8a2}
+*{box-sizing:border-box}
+html{background:var(--bg)}
+body{margin:0;background:var(--bg);color:var(--text);font:14px/1.45 ui-monospace,SFMono-Regular,Consolas,"Liberation Mono",monospace;min-height:100vh}
+button,input{font:inherit}button{cursor:pointer;color:var(--text);background:#222;border:1px solid var(--line);border-radius:0;padding:11px 13px;transition:background .12s,border-color .12s}button:hover{border-color:var(--accent)}button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}button:disabled{opacity:.35;cursor:not-allowed}
+.wrap{max-width:1060px;margin:auto;padding:25px 20px 42px}.top{display:flex;align-items:center;justify-content:space-between;gap:16px;border-bottom:1px solid var(--line);padding-bottom:17px}.brand{font-weight:900;letter-spacing:.16em;font-size:22px}.brand i{font-style:normal;color:var(--accent)}.sub{font-size:10px;color:var(--muted);letter-spacing:.14em;margin-top:4px}.clock{color:var(--muted);font-size:13px;text-align:right}.clock strong{display:block;color:var(--text);font-size:18px;font-weight:500}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:18px 0}.stat{border:1px solid var(--line);background:var(--panel);padding:13px 15px;min-height:75px}.stat label{display:block;font-size:10px;letter-spacing:.12em;color:var(--muted);text-transform:uppercase}.stat strong{display:block;font-size:23px;margin-top:5px;font-weight:500}.stat strong small{font-size:12px;color:var(--muted)}
+.layout{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(290px,.75fr);gap:13px}.panel{border:1px solid var(--line);background:var(--panel);padding:18px}.panel-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:20px}.eyebrow{font-size:10px;letter-spacing:.14em;color:var(--muted);text-transform:uppercase}.tag{font-size:10px;letter-spacing:.08em;padding:4px 7px;border:1px solid var(--line);color:var(--muted)}.tag.active{color:var(--accent);border-color:#697c38}.focus{min-height:330px;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:16px 4px 22px}.status{font-size:10px;color:var(--accent);letter-spacing:.16em;text-transform:uppercase;margin-bottom:14px}.task-title{font-size:clamp(22px,4vw,37px);line-height:1.15;font-weight:600;overflow-wrap:anywhere;max-width:100%;margin:0 0 18px}.timer{font-size:clamp(54px,10vw,82px);line-height:1;font-weight:400;letter-spacing:-.06em;font-variant-numeric:tabular-nums}.timer.warning{color:var(--danger)}.progress{width:min(340px,90%);height:4px;background:#35352f;margin:22px 0 10px;overflow:hidden}.progress>div{height:100%;width:0;background:var(--accent);transition:width .25s linear}.hint{font-size:11px;color:var(--muted);min-height:17px}.actions{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-top:17px}.primary{background:var(--accent);color:#111;border-color:var(--accent);font-weight:800}.primary:hover{background:#e4ff9d}.quiet{background:transparent}.danger{color:var(--danger)}
+.form{display:grid;grid-template-columns:minmax(0,1fr) 105px;gap:8px}.field label{display:block;font-size:10px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:7px}input{min-width:0;width:100%;padding:12px;background:#101010;color:var(--text);border:1px solid var(--line);border-radius:0}input::placeholder{color:#66665f}.add-btn{width:100%;margin-top:10px}.side-panel{margin-top:13px}.section-title{font-size:12px;text-transform:uppercase;letter-spacing:.12em;font-weight:700}.count{color:var(--muted);font-size:11px}.task-list{list-style:none;padding:0;margin:0}.task-row{display:flex;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid #30302b}.task-row:last-child{border-bottom:0}.task-index{color:var(--accent);font-size:11px;min-width:24px}.task-info{min-width:0;flex:1}.task-name{overflow-wrap:anywhere}.task-meta{font-size:10px;color:var(--muted);margin-top:3px}.remove{padding:5px 8px;color:var(--muted);background:transparent;border:0;font-size:16px}.remove:hover{color:var(--danger)}.empty{padding:22px 0;color:var(--muted);font-size:12px;text-align:center}.current-mini{border-left:2px solid var(--accent);padding-left:12px;margin-bottom:17px}.current-mini .task-name{font-size:13px}.current-mini .task-meta{font-size:10px}.history{margin-top:13px}.history-list{list-style:none;padding:0;margin:10px 0 0}.history-list li{display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-top:1px solid #30302b;font-size:11px}.history-list span:last-child{color:var(--muted);white-space:nowrap}.footer{display:flex;justify-content:space-between;gap:12px;align-items:center;border-top:1px solid var(--line);margin-top:18px;padding-top:13px;color:var(--muted);font-size:10px}.db-state{display:flex;align-items:center;gap:7px}.dot{width:6px;height:6px;border-radius:50%;background:var(--good);display:inline-block}.toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:#eee;color:#111;padding:10px 15px;font-size:12px;max-width:calc(100vw - 30px);text-align:center;z-index:2;display:none}.toast.show{display:block}.notification-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;border:1px solid var(--line);background:var(--panel);padding:10px 13px;margin:14px 0;color:var(--muted);font-size:11px}.notification-actions{display:flex;gap:7px;flex-wrap:wrap}.notification-actions button{padding:7px 9px;font-size:10px}.routine-builder{display:grid;gap:12px}.routine-fields{display:grid;grid-template-columns:minmax(0,1fr) 105px;gap:8px}.draft-list,.routine-list{list-style:none;padding:0;margin:8px 0 0}.draft-row,.routine-row{display:flex;align-items:center;gap:9px;padding:10px 0;border-bottom:1px solid #30302b}.draft-row:last-child,.routine-row:last-child{border-bottom:0}.draft-info,.routine-info{min-width:0;flex:1}.routine-actions{display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end}.routine-actions button{padding:6px 8px;font-size:10px}.routine-empty{padding:14px 0;color:var(--muted);font-size:11px;text-align:center}.routine-buttons{display:flex;gap:8px;flex-wrap:wrap}.routine-buttons button{flex:1}.help{font-size:10px;color:var(--muted);margin-top:8px;line-height:1.5}.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
+@media(max-width:760px){.wrap{padding:18px 12px 28px}.layout{grid-template-columns:1fr}.focus{min-height:280px}.stats{gap:7px}.stat{padding:11px 9px}.stat strong{font-size:20px}.stat label{font-size:9px}.panel{padding:15px}.clock{font-size:11px}.brand{font-size:20px}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div><div class="brand">◼ <i>FLOW</i></div><div class="sub">TASK SEQUENCE / PICO-8 INSPIRED</div></div>
+    <div class="clock"><strong id="wall-clock">--:--</strong><span id="today">CARREGANDO...</span></div>
+  </header>
+  <div class="notification-bar">
+    <div><div id="notification-status">AVISOS DO NAVEGADOR: VERIFICANDO...</div><div class="help">Para avisos fora da aba, conceda permissão e mantenha o FLOW aberto. Fechar o navegador pode impedir o alerta.</div></div>
+    <div class="notification-actions">
+      <button id="notification-btn" class="quiet" type="button">ativar notificações</button>
+      <button id="notification-test-btn" type="button" disabled>testar aviso</button>
+    </div>
+  </div>
+  <section class="stats" aria-label="Estatísticas">
+    <div class="stat"><label>Sequência</label><strong id="score">0 <small>tarefas</small></strong></div>
+    <div class="stat"><label>Tempo extra</label><strong id="bonus">00:00</strong></div>
+    <div class="stat"><label>Na fila</label><strong id="queue-count">0 <small>tarefas</small></strong></div>
+  </section>
+  <main class="layout">
+    <section>
+      <div class="panel">
+        <div class="panel-head"><span class="eyebrow">01 / Sessão atual</span><span class="tag" id="phase-tag">AGUARDANDO</span></div>
+        <div class="focus" aria-live="polite">
+          <div class="status" id="status">PRONTO PARA COMEÇAR</div>
+          <h1 class="task-title" id="current-title">Nenhuma tarefa ativa</h1>
+          <div class="timer" id="timer">--:--</div>
+          <div class="progress" role="progressbar" aria-label="Progresso da tarefa" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div id="progress-fill"></div></div>
+          <div class="hint" id="timer-hint">Adicione uma tarefa para iniciar.</div>
+          <div class="actions">
+            <button class="primary" id="complete-btn" disabled>✓ concluir tarefa</button>
+            <button class="quiet" id="skip-btn" disabled>pular</button>
+          </div>
+        </div>
+      </div>
+      <div class="panel side-panel">
+        <div class="panel-head"><span class="eyebrow">02 / Nova tarefa</span><span class="tag">ADD</span></div>
+        <form id="task-form">
+          <div class="form">
+            <div class="field"><label for="task-title">Nome da atividade</label><input id="task-title" name="title" maxlength="70" placeholder="ex.: estudar cálculo" autocomplete="off" required></div>
+            <div class="field"><label for="task-minutes">Minutos</label><input id="task-minutes" name="minutes" type="number" min="1" max="1440" value="25" required></div>
+          </div>
+          <button class="primary add-btn" type="submit">+ adicionar à fila</button>
+        </form>
+      </div>
+      <div class="panel side-panel">
+        <div class="panel-head"><span class="eyebrow">03 / Criar rotina ou modelo</span><span class="tag">TEMPLATE</span></div>
+        <div class="routine-builder">
+          <div class="field"><label for="routine-name">Nome da rotina</label><input id="routine-name" maxlength="60" placeholder="ex.: estudar para a prova" autocomplete="off"></div>
+          <div class="routine-fields">
+            <div class="field"><label for="routine-task-title">Etapa / atividade</label><input id="routine-task-title" maxlength="70" placeholder="ex.: revisar teoria" autocomplete="off"></div>
+            <div class="field"><label for="routine-task-minutes">Minutos</label><input id="routine-task-minutes" type="number" min="1" max="1440" value="25"></div>
+          </div>
+          <button id="routine-add-task" class="quiet" type="button">+ adicionar etapa à rotina</button>
+          <div>
+            <div class="panel-head" style="margin:8px 0 0"><span class="section-title">Etapas do modelo</span><span class="count" id="routine-draft-count">0 ETAPAS</span></div>
+            <ul class="draft-list" id="routine-draft-list"></ul>
+            <div class="routine-empty" id="routine-draft-empty">Adicione uma ou mais etapas.</div>
+          </div>
+          <div class="routine-buttons">
+            <button id="routine-save" class="primary" type="button" disabled>salvar rotina</button>
+            <button id="routine-save-queue" class="quiet" type="button">salvar fila como modelo</button>
+          </div>
+          <div class="help">As rotinas ficam salvas no IndexedDB. Você pode reutilizá-las para adicionar toda a sequência à fila.</div>
+        </div>
+      </div>
+    </section>
+    <aside>
+      <div class="panel">
+        <div class="panel-head"><span class="section-title">Próximas tarefas</span><span class="count" id="queue-label">0 ITENS</span></div>
+        <div id="active-mini"></div>
+        <ul class="task-list" id="queue-list"></ul>
+        <div class="empty" id="queue-empty">Sua fila está vazia.</div>
+      </div>
+      <div class="panel history">
+        <div class="panel-head" style="margin-bottom:5px"><span class="section-title">Rotinas salvas</span><span class="count" id="routine-count">0 MODELOS</span></div>
+        <ul class="routine-list" id="routine-list"></ul>
+        <div class="routine-empty" id="routine-empty">Nenhuma rotina salva ainda.</div>
+      </div>
+      <div class="panel history">
+        <div class="panel-head" style="margin-bottom:5px"><span class="section-title">Registro recente</span><button class="remove" id="clear-history" title="Limpar registro" aria-label="Limpar registro">×</button></div>
+        <ul class="history-list" id="history-list"></ul>
+        <div class="empty" id="history-empty">As tarefas concluídas aparecem aqui.</div>
+      </div>
+    </aside>
+  </main>
+  <footer class="footer"><span class="db-state"><span class="dot" id="db-dot"></span><span id="db-label">SALVANDO NO NAVEGADOR</span></span><button class="quiet" id="reset-btn">reiniciar sequência</button></footer>
+</div>
+<div class="toast" id="toast" role="status"></div>
+<script>
+(() => {
+  'use strict';
+  const DB_NAME = 'flow-task-manager';
+  const DB_VERSION = 1;
+  const STORE = 'app';
+  const KEY = 'state';
+  const $ = (id) => document.getElementById(id);
+  const els = {
+    score: $('score'), bonus: $('bonus'), queueCount: $('queue-count'), phaseTag: $('phase-tag'), status: $('status'),
+    currentTitle: $('current-title'), timer: $('timer'), hint: $('timer-hint'), progress: $('progress-fill'),
+    progressBar: document.querySelector('[role="progressbar"]'), complete: $('complete-btn'), skip: $('skip-btn'),
+    form: $('task-form'), title: $('task-title'), minutes: $('task-minutes'), queue: $('queue-list'), queueEmpty: $('queue-empty'),
+    queueLabel: $('queue-label'), activeMini: $('active-mini'), history: $('history-list'), historyEmpty: $('history-empty'),
+    routineName: $('routine-name'), routineTaskTitle: $('routine-task-title'), routineTaskMinutes: $('routine-task-minutes'),
+    routineAddTask: $('routine-add-task'), routineSave: $('routine-save'), routineSaveQueue: $('routine-save-queue'),
+    routineDraft: $('routine-draft-list'), routineDraftEmpty: $('routine-draft-empty'), routineDraftCount: $('routine-draft-count'),
+    routineList: $('routine-list'), routineEmpty: $('routine-empty'), routineCount: $('routine-count'),
+    notificationStatus: $('notification-status'), notificationButton: $('notification-btn'), notificationTestButton: $('notification-test-btn'),
+    clock: $('wall-clock'), today: $('today'), dbDot: $('db-dot'), dbLabel: $('db-label'), toast: $('toast')
+  };
+  let db;
+  let state = { queue: [], current: null, score: 0, bonusSeconds: 0, history: [], routines: [] };
+  let routineDraft = [];
+  let toastTimeout;
+  let transitionLock = false;
+
+  function openDatabase() {
+    return new Promise((resolve, reject) => {
+      if (!('indexedDB' in window)) return reject(new Error('Este navegador não oferece IndexedDB.'));
+      const request = indexedDB.open(DB_NAME, DB_VERSION);
+      request.onupgradeneeded = () => {
+        const database = request.result;
+        if (!database.objectStoreNames.contains(STORE)) database.createObjectStore(STORE, { keyPath: 'id' });
+      };
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error || new Error('Não foi possível abrir o banco de dados.'));
+      request.onblocked = () => reject(new Error('Feche outras abas deste app e recarregue.'));
+    });
+  }
+  function readState() {
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(STORE, 'readonly');
+      const request = tx.objectStore(STORE).get(KEY);
+      request.onsuccess = () => resolve(request.result ? request.result.value : null);
+      request.onerror = () => reject(request.error);
+    });
+  }
+  function saveState() {
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(STORE, 'readwrite');
+      tx.objectStore(STORE).put({ id: KEY, value: state });
+      tx.oncomplete = () => { setDBStatus(true, 'SALVO NO INDEXEDDB'); resolve(); };
+      tx.onerror = () => { setDBStatus(false, 'ERRO AO SALVAR'); reject(tx.error || new Error('Falha ao salvar.')); };
+      tx.onabort = () => reject(tx.error || new Error('Gravação cancelada.'));
+    });
+  }
+  function makeId() {
+    return (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  }
+  function updateNotificationUI() {
+    if (!('Notification' in window)) {
+      els.notificationStatus.textContent = 'NOTIFICAÇÕES NÃO SUPORTADAS NESTE CONTEXTO';
+      els.notificationButton.textContent = 'como ativar';
+      els.notificationButton.disabled = false;
+      els.notificationTestButton.disabled = true;
+      return;
+    }
+    const permission = Notification.permission;
+    if (permission === 'granted') {
+      els.notificationStatus.textContent = 'AVISOS DO NAVEGADOR ATIVADOS';
+      els.notificationButton.textContent = '✓ notificações ativas';
+      els.notificationButton.disabled = true;
+      els.notificationTestButton.disabled = false;
+    } else if (permission === 'denied') {
+      els.notificationStatus.textContent = 'PERMISSÃO BLOQUEADA NAS CONFIGURAÇÕES DO NAVEGADOR';
+      els.notificationButton.textContent = 'permissão bloqueada';
+      els.notificationButton.disabled = false;
+      els.notificationTestButton.disabled = true;
+    } else {
+      els.notificationStatus.textContent = 'ATIVE OS AVISOS PARA RECEBER ALERTAS EM OUTRA ABA';
+      els.notificationButton.textContent = 'ativar notificações';
+      els.notificationButton.disabled = false;
+      els.notificationTestButton.disabled = true;
+    }
+  }
+  function systemNotification(title, body, tag = 'flow-alert') {
+    if (!('Notification' in window) || Notification.permission !== 'granted') return false;
+    try {
+      const notice = new Notification(title, { body, tag, renotify: true, requireInteraction: true });
+      notice.onclick = () => { try { window.focus(); } catch (_) {} notice.close(); };
+      return true;
+    } catch (error) {
+      console.warn('Notificação do navegador indisponível:', error);
+      return false;
+    }
+  }
+  async function enableNotifications() {
+    if (!('Notification' in window)) {
+      notify('Este navegador/contexto não suporta notificações. Experimente abrir o app em localhost ou HTTPS.');
+      updateNotificationUI();
+      return;
+    }
+    if (Notification.permission === 'denied') {
+      notify('A permissão está bloqueada. Libere as notificações nas configurações do site no navegador.');
+      updateNotificationUI();
+      return;
+    }
+    try {
+      const permission = Notification.permission === 'granted' ? 'granted' : await Notification.requestPermission();
+      updateNotificationUI();
+      if (permission === 'granted') {
+        systemNotification('FLOW está ativo', 'Você receberá avisos quando o tempo das tarefas acabar.', 'flow-test');
+        notify('Notificações ativadas.');
+      } else {
+        notify('Permissão não concedida; os avisos aparecerão apenas dentro do app.');
+      }
+    } catch (_) {
+      notify('Não foi possível solicitar permissão. Abra o app em localhost ou HTTPS.');
+    }
+  }
+  function alertUser(title, body, tag) {
+    systemNotification(title, body, tag);
+    notify(`${title}: ${body}`);
+  }
+  function setDBStatus(ok, label) {
+    els.dbDot.style.background = ok ? 'var(--good)' : 'var(--danger)';
+    els.dbLabel.textContent = label;
+  }
+  function notify(message) {
+    els.toast.textContent = message;
+    els.toast.classList.add('show');
+    clearTimeout(toastTimeout);
+    toastTimeout = setTimeout(() => els.toast.classList.remove('show'), 2400);
+  }
+  function formatTime(seconds) {
+    const safe = Math.max(0, Math.floor(seconds));
+    const h = Math.floor(safe / 3600);
+    const m = Math.floor((safe % 3600) / 60);
+    const s = safe % 60;
+    return h > 0 ? `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}` : `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  }
+  function workRemaining(task, now = Date.now()) {
+    if (!task) return 0;
+    return Math.max(0, Math.ceil((task.deadline - now) / 1000));
+  }
+  function extraRemaining(now = Date.now()) {
+    if (!state.current || state.current.phase !== 'overtime' || !state.current.overtimeStartedAt) return Math.max(0, state.bonusSeconds);
+    const used = Math.floor(Math.max(0, now - state.current.overtimeStartedAt) / 1000);
+    return Math.max(0, state.bonusSeconds - used);
+  }
+  function startNext() {
+    if (state.current || state.queue.length === 0) return;
+    const next = state.queue.shift();
+    const now = Date.now();
+    state.current = { ...next, deadline: now + next.durationSeconds * 1000, phase: 'work', overtimeStartedAt: null, startedAt: now };
+  }
+  function beep(kind = 'done') {
+    try {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) return;
+      const ctx = new AudioCtx();
+      const tones = kind === 'alarm' ? [740, 520, 740, 520] : [660, 880];
+      tones.forEach((frequency, index) => {
+        const oscillator = ctx.createOscillator();
+        const gain = ctx.createGain();
+        oscillator.type = 'square';
+        oscillator.frequency.value = frequency;
+        gain.gain.setValueAtTime(0.0001, ctx.currentTime + index * (kind === 'alarm' ? .22 : .13));
+        gain.gain.exponentialRampToValueAtTime(0.07, ctx.currentTime + index * (kind === 'alarm' ? .22 : .13) + .015);
+        gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + index * (kind === 'alarm' ? .22 : .13) + .12);
+        oscillator.connect(gain); gain.connect(ctx.destination);
+        oscillator.start(ctx.currentTime + index * (kind === 'alarm' ? .22 : .13));
+        oscillator.stop(ctx.currentTime + index * (kind === 'alarm' ? .22 : .13) + .13);
+      });
+      setTimeout(() => ctx.close().catch(() => {}), 1300);
+    } catch (_) { /* Som opcional: o app continua funcionando sem áudio. */ }
+  }
+  function addHistory(title, message) {
+    state.history.unshift({ title, message, at: Date.now() });
+    state.history = state.history.slice(0, 12);
+  }
+  async function completeCurrent() {
+    if (!state.current || transitionLock) return;
+    transitionLock = true;
+    const now = Date.now();
+    const task = state.current;
+    if (task.phase === 'work') {
+      state.bonusSeconds += workRemaining(task, now);
+      addHistory(task.title, 'CONCLUÍDA');
+    } else {
+      state.bonusSeconds = extraRemaining(now);
+      addHistory(task.title, 'CONCLUÍDA NO EXTRA');
+    }
+    state.score += 1;
+    state.current = null;
+    startNext();
+    try { await saveState(); } catch (_) { notify('Não foi possível salvar a alteração.'); }
+    render(); beep('done'); notify('Tarefa concluída · sequência +1');
+    transitionLock = false;
+  }
+  async function skipCurrent() {
+    if (!state.current || transitionLock) return;
+    const title = state.current.title;
+    addHistory(title, 'PULADA');
+    state.current = null;
+    startNext();
+    try { await saveState(); } catch (_) { notify('Não foi possível salvar a alteração.'); }
+    render(); notify('Tarefa pulada.');
+  }
+  async function tick() {
+    if (!state.current || transitionLock) { render(); return; }
+    const now = Date.now();
+    if (state.current.phase === 'work' && workRemaining(state.current, now) <= 0) {
+      const failedTask = state.current;
+      const secondsSinceDeadline = Math.max(0, Math.floor((now - failedTask.deadline) / 1000));
+      // If the tab was suspended longer than the available extra time, report one missed deadline.
+      if (state.bonusSeconds <= secondsSinceDeadline) {
+        transitionLock = true;
+        addHistory(failedTask.title, 'TEMPO ESGOTADO');
+        state.current = null;
+        state.score = 0;
+        state.bonusSeconds = 0;
+        startNext();
+        beep('alarm');
+        try { await saveState(); } catch (_) { /* A contagem continua em memória. */ }
+        alertUser('Tempo esgotado', `${failedTask.title}. O FLOW ficou sem tempo extra e reiniciou a sequência.`, `flow-expired-${failedTask.id}`);
+        transitionLock = false;
+      } else {
+        failedTask.phase = 'overtime';
+        failedTask.overtimeStartedAt = failedTask.deadline;
+        beep('alarm');
+        alertUser('Tempo da tarefa acabou', `${failedTask.title}. Tempo extra disponível: ${formatTime(state.bonusSeconds)}.`, `flow-work-${failedTask.id}`);
+        try { await saveState(); } catch (_) { /* A contagem continua em memória. */ }
+      }
+    }
+    if (state.current && state.current.phase === 'overtime' && extraRemaining(now) <= 0) {
+      transitionLock = true;
+      const failedTitle = state.current.title;
+      const failedId = state.current.id;
+      addHistory(failedTitle, 'TEMPO ESGOTADO');
+      state.current = null;
+      state.score = 0;
+      state.bonusSeconds = 0;
+      startNext();
+      try { await saveState(); } catch (_) { notify('Não foi possível salvar a alteração.'); }
+      alertUser('Tempo extra esgotado', `${failedTitle}. A sequência foi reiniciada.`, `flow-overtime-${failedId}`);
+      transitionLock = false;
+    }
+    render(now);
+  }
+  function render(now = Date.now()) {
+    els.clock.textContent = new Date(now).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    els.today.textContent = new Date(now).toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' }).toUpperCase();
+    els.score.innerHTML = `${state.score} <small>${state.score === 1 ? 'tarefa' : 'tarefas'}</small>`;
+    els.bonus.textContent = formatTime(extraRemaining(now));
+    els.queueCount.innerHTML = `${state.queue.length} <small>${state.queue.length === 1 ? 'tarefa' : 'tarefas'}</small>`;
+    els.queueLabel.textContent = `${state.queue.length} ${state.queue.length === 1 ? 'ITEM' : 'ITENS'}`;
+    const task = state.current;
+    const hasTask = Boolean(task);
+    els.complete.disabled = !hasTask;
+    els.skip.disabled = !hasTask;
+    if (task) {
+      const workLeft = workRemaining(task, now);
+      const isExtra = task.phase === 'overtime';
+      const left = isExtra ? extraRemaining(now) : workLeft;
+      const percentage = isExtra ? 100 : Math.max(0, Math.min(100, ((task.durationSeconds - workLeft) / task.durationSeconds) * 100));
+      els.phaseTag.textContent = isExtra ? 'TEMPO EXTRA' : 'EM ANDAMENTO';
+      els.phaseTag.className = `tag active${isExtra ? ' warning' : ''}`;
+      els.status.textContent = isExtra ? '⚠ TEMPO ESGOTADO · FINALIZE' : 'SESSÃO EM ANDAMENTO';
+      els.currentTitle.textContent = task.title;
+      els.timer.textContent = formatTime(left);
+      els.timer.classList.toggle('warning', isExtra);
+      els.progress.style.width = `${percentage}%`;
+      els.progress.style.background = isExtra ? 'var(--danger)' : 'var(--accent)';
+      els.progressBar.setAttribute('aria-valuenow', String(Math.round(percentage)));
+      els.hint.textContent = isExtra ? 'Finalize agora para preservar a sequência.' : `Sessão de ${formatTime(task.durationSeconds)} · concluir antes do fim acumula o tempo restante.`;
+      els.complete.textContent = '✓ concluir tarefa';
+      els.activeMini.innerHTML = `<div class="current-mini"><div class="eyebrow">Em execução</div><div class="task-name">${escapeHTML(task.title)}</div><div class="task-meta">${formatTime(task.durationSeconds)} de duração</div></div>`;
+    } else {
+      els.phaseTag.textContent = 'AGUARDANDO'; els.phaseTag.className = 'tag';
+      els.status.textContent = state.queue.length ? 'PREPARANDO PRÓXIMA TAREFA' : 'PRONTO PARA COMEÇAR';
+      els.currentTitle.textContent = 'Nenhuma tarefa ativa'; els.timer.textContent = '--:--'; els.timer.classList.remove('warning');
+      els.progress.style.width = '0%'; els.progress.style.background = 'var(--accent)'; els.progressBar.setAttribute('aria-valuenow','0');
+      els.hint.textContent = 'Adicione uma tarefa para iniciar.'; els.activeMini.innerHTML = '';
+    }
+    els.queue.replaceChildren();
+    state.queue.forEach((item, index) => {
+      const li = document.createElement('li'); li.className = 'task-row';
+      const num = document.createElement('span'); num.className = 'task-index'; num.textContent = String(index + 1).padStart(2, '0');
+      const info = document.createElement('div'); info.className = 'task-info';
+      const name = document.createElement('div'); name.className = 'task-name'; name.textContent = item.title;
+      const meta = document.createElement('div'); meta.className = 'task-meta'; meta.textContent = `${formatTime(item.durationSeconds)} · ${Math.ceil(item.durationSeconds / 60)} min`;
+      info.append(name, meta);
+      const del = document.createElement('button'); del.className = 'remove'; del.type = 'button'; del.textContent = '×'; del.title = `Remover ${item.title}`; del.setAttribute('aria-label', `Remover ${item.title}`);
+      del.addEventListener('click', () => removeQueued(item.id));
+      li.append(num, info, del); els.queue.append(li);
+    });
+    els.queueEmpty.style.display = state.queue.length ? 'none' : 'block';
+    els.history.replaceChildren();
+    state.history.forEach((item) => {
+      const li = document.createElement('li');
+      const title = document.createElement('span'); title.textContent = item.title;
+      const right = document.createElement('span'); right.textContent = item.message;
+      li.append(title, right); els.history.append(li);
+    });
+    els.historyEmpty.style.display = state.history.length ? 'none' : 'block';
+    renderRoutineDraft();
+    renderRoutines();
+  }
+  function renderRoutineDraft() {
+    els.routineDraft.replaceChildren();
+    routineDraft.forEach((item, index) => {
+      const li = document.createElement('li'); li.className = 'draft-row';
+      const num = document.createElement('span'); num.className = 'task-index'; num.textContent = String(index + 1).padStart(2, '0');
+      const info = document.createElement('div'); info.className = 'draft-info';
+      const name = document.createElement('div'); name.className = 'task-name'; name.textContent = item.title;
+      const meta = document.createElement('div'); meta.className = 'task-meta'; meta.textContent = `${Math.ceil(item.durationSeconds / 60)} min`;
+      info.append(name, meta);
+      const remove = document.createElement('button'); remove.className = 'remove'; remove.type = 'button'; remove.textContent = '×'; remove.title = 'Remover etapa';
+      remove.addEventListener('click', () => { routineDraft.splice(index, 1); renderRoutineDraft(); });
+      li.append(num, info, remove); els.routineDraft.append(li);
+    });
+    els.routineDraftEmpty.style.display = routineDraft.length ? 'none' : 'block';
+    els.routineDraftCount.textContent = `${routineDraft.length} ${routineDraft.length === 1 ? 'ETAPA' : 'ETAPAS'}`;
+    els.routineSave.disabled = routineDraft.length === 0 || !els.routineName.value.trim();
+  }
+  function renderRoutines() {
+    els.routineList.replaceChildren();
+    (state.routines || []).forEach((routine) => {
+      const li = document.createElement('li'); li.className = 'routine-row';
+      const info = document.createElement('div'); info.className = 'routine-info';
+      const name = document.createElement('div'); name.className = 'task-name'; name.textContent = routine.name;
+      const meta = document.createElement('div'); meta.className = 'task-meta';
+      const totalSeconds = routine.tasks.reduce((total, task) => total + task.durationSeconds, 0);
+      meta.textContent = `${routine.tasks.length} ${routine.tasks.length === 1 ? 'etapa' : 'etapas'} · ${formatTime(totalSeconds)}`;
+      info.append(name, meta);
+      const actions = document.createElement('div'); actions.className = 'routine-actions';
+      const use = document.createElement('button'); use.className = 'primary'; use.type = 'button'; use.textContent = 'usar';
+      use.title = 'Adicionar esta rotina à fila';
+      use.addEventListener('click', () => useRoutine(routine.id));
+      const remove = document.createElement('button'); remove.className = 'remove'; remove.type = 'button'; remove.textContent = '×'; remove.title = `Excluir ${routine.name}`;
+      remove.addEventListener('click', () => deleteRoutine(routine.id));
+      actions.append(use, remove); li.append(info, actions); els.routineList.append(li);
+    });
+    els.routineEmpty.style.display = state.routines && state.routines.length ? 'none' : 'block';
+    els.routineCount.textContent = `${(state.routines || []).length} ${(state.routines || []).length === 1 ? 'MODELO' : 'MODELOS'}`;
+  }
+  function escapeHTML(value) {
+    return String(value).replace(/[&<>"']/g, (c) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' })[c]);
+  }
+  async function addDraftTask() {
+    const title = els.routineTaskTitle.value.trim();
+    const minutes = Number(els.routineTaskMinutes.value);
+    if (!title) { els.routineTaskTitle.focus(); return; }
+    if (!Number.isInteger(minutes) || minutes < 1 || minutes > 1440) { notify('Informe uma duração entre 1 e 1440 minutos.'); els.routineTaskMinutes.focus(); return; }
+    routineDraft.push({ id: makeId(), title, durationSeconds: minutes * 60 });
+    els.routineTaskTitle.value = '';
+    els.routineTaskMinutes.value = '25';
+    renderRoutineDraft();
+    els.routineTaskTitle.focus();
+  }
+  async function saveRoutine(name, tasks) {
+    const normalizedName = String(name || '').trim();
+    if (!normalizedName || !tasks.length) { notify('Informe um nome e adicione pelo menos uma etapa.'); return false; }
+    state.routines = Array.isArray(state.routines) ? state.routines : [];
+    const routine = { id: makeId(), name: normalizedName, tasks: tasks.map(task => ({ title: task.title, durationSeconds: task.durationSeconds })), createdAt: Date.now() };
+    state.routines.unshift(routine);
+    try { await saveState(); }
+    catch (_) { state.routines = state.routines.filter(item => item.id !== routine.id); notify('Não foi possível salvar a rotina no IndexedDB.'); return false; }
+    render(); notify(`Rotina salva: ${normalizedName}`);
+    return true;
+  }
+  async function useRoutine(id) {
+    const routine = (state.routines || []).find(item => item.id === id);
+    if (!routine) return;
+    const tasks = routine.tasks.map(task => ({ id: makeId(), title: task.title, durationSeconds: task.durationSeconds, addedAt: Date.now() }));
+    state.queue.push(...tasks);
+    startNext();
+    try { await saveState(); } catch (_) { notify('A rotina foi carregada, mas não foi possível salvar a fila.'); }
+    render(); notify(`Rotina adicionada à fila: ${routine.name}`);
+  }
+  async function deleteRoutine(id) {
+    const routine = (state.routines || []).find(item => item.id === id);
+    if (!routine || !window.confirm(`Excluir a rotina '${routine.name}'?`)) return;
+    const previous = state.routines;
+    state.routines = state.routines.filter(item => item.id !== id);
+    try { await saveState(); } catch (_) { state.routines = previous; notify('Não foi possível excluir a rotina.'); }
+    render();
+  }
+  async function removeQueued(id) {
+    state.queue = state.queue.filter(item => item.id !== id);
+    try { await saveState(); } catch (_) { notify('Não foi possível salvar a alteração.'); }
+    render();
+  }
+  els.form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const title = els.title.value.trim();
+    const minutes = Number(els.minutes.value);
+    if (!title) { els.title.focus(); return; }
+    if (!Number.isInteger(minutes) || minutes < 1 || minutes > 1440) { notify('Informe uma duração entre 1 e 1440 minutos.'); els.minutes.focus(); return; }
+    state.queue.push({ id: makeId(), title, durationSeconds: minutes * 60, addedAt: Date.now() });
+    startNext();
+    try { await saveState(); } catch (_) { notify('A tarefa está na tela, mas não foi possível salvá-la.'); }
+    els.title.value = ''; els.minutes.value = '25'; els.title.focus();
+    render();
+    notify('Tarefa adicionada.');
+  });
+  els.complete.addEventListener('click', completeCurrent);
+  els.skip.addEventListener('click', skipCurrent);
+  els.routineAddTask.addEventListener('click', addDraftTask);
+  els.routineTaskTitle.addEventListener('keydown', (event) => { if (event.key === 'Enter') { event.preventDefault(); addDraftTask(); } });
+  els.routineName.addEventListener('input', renderRoutineDraft);
+  els.routineSave.addEventListener('click', async () => {
+    const name = els.routineName.value.trim();
+    if (!name) { els.routineName.focus(); notify('Dê um nome para a rotina.'); return; }
+    if (!routineDraft.length) { notify('Adicione pelo menos uma etapa.'); return; }
+    const saved = await saveRoutine(name, routineDraft);
+    if (!saved) return;
+    routineDraft = [];
+    els.routineName.value = '';
+    renderRoutineDraft();
+  });
+  els.routineSaveQueue.addEventListener('click', async () => {
+    const tasks = [ ...(state.current ? [state.current] : []), ...state.queue ];
+    if (!tasks.length) { notify('A fila está vazia. Monte uma sequência antes de salvar.'); return; }
+    const name = window.prompt('Nome deste modelo:');
+    if (name === null) return;
+    await saveRoutine(name, tasks);
+  });
+  els.notificationButton.addEventListener('click', enableNotifications);
+  els.notificationTestButton.addEventListener('click', () => {
+    if (!('Notification' in window) || Notification.permission !== 'granted') { enableNotifications(); return; }
+    const sent = systemNotification('Teste do FLOW', 'As notificações estão funcionando neste navegador.', 'flow-test');
+    if (sent) notify('Notificação de teste enviada.'); else notify('O navegador não conseguiu exibir a notificação.');
+  });
+  $('clear-history').addEventListener('click', async () => {
+    state.history = [];
+    try { await saveState(); } catch (_) { notify('Não foi possível salvar a alteração.'); }
+    render(); notify('Registro limpo.');
+  });
+  $('reset-btn').addEventListener('click', async () => {
+    const accepted = window.confirm('Reiniciar a sequência e zerar o tempo extra? As tarefas da fila e a tarefa atual serão mantidas.');
+    if (!accepted) return;
+    state.score = 0; state.bonusSeconds = 0;
+    if (state.current && state.current.phase === 'overtime') {
+      addHistory(state.current.title, 'TEMPO ESGOTADO'); state.current = null; startNext();
+    }
+    try { await saveState(); } catch (_) { notify('Não foi possível salvar a alteração.'); }
+    render(); notify('Sequência reiniciada.');
+  });
+
+  async function init() {
+    try {
+      db = await openDatabase();
+      const loaded = await readState();
+      if (loaded && typeof loaded === 'object') {
+        state = {
+          queue: Array.isArray(loaded.queue) ? loaded.queue : [],
+          current: loaded.current && typeof loaded.current === 'object' ? loaded.current : null,
+          score: Number.isFinite(loaded.score) ? Math.max(0, loaded.score) : 0,
+          bonusSeconds: Number.isFinite(loaded.bonusSeconds) ? Math.max(0, loaded.bonusSeconds) : 0,
+          history: Array.isArray(loaded.history) ? loaded.history.slice(0, 12) : [],
+          routines: Array.isArray(loaded.routines) ? loaded.routines.filter(r => r && typeof r.name === 'string' && Array.isArray(r.tasks)).map(r => ({ ...r, tasks: r.tasks.filter(t => t && typeof t.title === 'string' && Number.isFinite(t.durationSeconds) && t.durationSeconds > 0) })) : []
+        };
+      }
+      startNext();
+      setDBStatus(true, 'INDEXEDDB CONECTADO');
+      updateNotificationUI();
+      await saveState();
+      render();
+      window.setInterval(tick, 250);
+    } catch (error) {
+      setDBStatus(false, 'ERRO NO INDEXEDDB');
+      updateNotificationUI();
+      render();
+      els.complete.disabled = true;
+      notify(error && error.message ? error.message : 'Não foi possível iniciar o banco de dados.');
+      console.error(error);
+    }
+  }
+  init();
+})();
+</script>
+</body>
+</html>
